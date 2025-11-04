@@ -23,6 +23,7 @@ def text_to_speech(input_language, output_language, text, tld):
     tts.save(f"temp/{my_file_name}.mp3")
     return my_file_name, translation
 
+
 # Función para limpiar archivos antiguos
 def remove_files(n):
     mp3_files = glob.glob("temp/*mp3")
@@ -35,6 +36,7 @@ def remove_files(n):
                 print("Deleted ", f)
 
 remove_files(7)
+
 
 # Interfaz Streamlit
 st.title("🧠 Reconocimiento Óptico de Caracteres")
@@ -51,12 +53,13 @@ with st.sidebar:
     st.subheader("Procesamiento para Cámara")
     filtro = st.radio("Filtro para imagen con cámara", ('Sí', 'No'))
 
-bg_image = st.file_uploader("Cargar Imagen:", type=["png", "jpg"])
+
+bg_image = st.file_uploader("Cargar Imagen:", type=["png", "jpg", "jpeg"])
 if bg_image is not None:
     uploaded_file = bg_image
     st.image(uploaded_file, caption='Imagen cargada.', use_container_width=True)
     
-    # Guardar imagen
+    # Guardar imagen temporalmente
     with open(uploaded_file.name, 'wb') as f:
         f.write(uploaded_file.read())
     
@@ -65,6 +68,7 @@ if bg_image is not None:
     img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
     text = pytesseract.image_to_string(img_rgb)
     st.write(text)
+
 
 if img_file_buffer is not None:
     bytes_data = img_file_buffer.getvalue()
@@ -76,6 +80,7 @@ if img_file_buffer is not None:
     img_rgb = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
     text = pytesseract.image_to_string(img_rgb)
     st.write(text)
+
 
 # --- Sidebar configuración de traducción ---
 with st.sidebar:
@@ -155,6 +160,18 @@ with st.sidebar:
 
     display_output_text = st.checkbox("Mostrar texto traducido")
 
-    if st.button("Convertir texto a audio"):
-        if text.strip() == "":
-            st.warning("Por favor, carga una imagen o toma una foto para reconocer texto prim
+
+# --- Botón principal ---
+if st.button("Convertir texto a audio"):
+    if text.strip() == "":
+        st.warning("Por favor, carga una imagen o toma una foto para reconocer texto primero.")
+    else:
+        result, output_text = text_to_speech(input_language, output_language, text, tld)
+        audio_file = open(f"temp/{result}.mp3", "rb")
+        audio_bytes = audio_file.read()
+
+        st.audio(audio_bytes, format="audio/mp3")
+
+        if display_output_text:
+            st.markdown("### Texto traducido:")
+            st.write(output_text)
